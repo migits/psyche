@@ -42,6 +42,8 @@ namespace psyche
                 IAsyncResult ar;
                 while (true) {
                     ar = ctrl.BeginInvoke(ftc, (double)(t0 / Stopwatch.Frequency));
+                    // EndInvokeするとStop関数の中のtask.Wait();とのデッドロックが起きる
+                    // ctrl.EndInvoke(ar);
 
                     while (t1 - t0 < ticksPerFrame) {
                         // CPUを一息入れるにはどれがいいんだろ...
