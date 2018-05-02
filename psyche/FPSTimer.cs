@@ -17,17 +17,15 @@ namespace psyche
         private readonly FrameTickCallback ftc;
         private readonly long ticksPerFrame;
         private readonly Control ctrl;
-        private readonly object lockObj = new object();
-        private readonly object ftcInvokingLock = new object();
         private Task task;
 
         public readonly double fps;
 
         public FPSTimer(FrameTickCallback ftc, double fps, Control ctrl) {
             this.ftc = ftc;
-            this.fps = fps;
-            this.ctrl = ctrl;
             this.ticksPerFrame = (long)(Stopwatch.Frequency / fps);
+            this.ctrl = ctrl;
+            this.fps = fps;
         }
 
         public void Start() {
@@ -51,10 +49,10 @@ namespace psyche
                         // Thread.Sleep(0);
                         // Thread.Sleep(1);
                         
-                        lock(lockObj) {
+                        lock(sw) {
                             if (!sw.IsRunning) return;
+                            t1 = sw.ElapsedTicks;
                         }
-                        t1 = sw.ElapsedTicks;
                     };
 
                     t0 += ticksPerFrame;
@@ -65,10 +63,14 @@ namespace psyche
         public void Stop() {
             if (!sw.IsRunning) return;
             
-            lock(lockObj) sw.Stop();
+            lock(sw) sw.Stop();
             task.Wait();
         }
 
-        public bool IsRunning { get{return sw.IsRunning;} }
+        public bool IsRunning { get{
+            lock(sw) {
+                return sw.IsRunning;
+            }
+        } }
     }
 }

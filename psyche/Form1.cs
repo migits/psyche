@@ -11,14 +11,17 @@ namespace psyche
 {
     public partial class Form1 : Form
     {
-        private readonly FPSTimer timer;
+        private readonly FPSTimer fpsTimer;
+        private readonly SimpleFPSMeasurer fpsMeasurer;
         private int frameCounter = 0;
+        private double fps = Double.NaN;
 
         public Form1()
         {
             InitializeComponent();
 
-            this.timer = new FPSTimer(frameTimer_Tick, 60, this);
+            this.fpsTimer = new FPSTimer(frameTimer_Tick, 60, this);
+            this.fpsMeasurer = new SimpleFPSMeasurer();
 
             int width = pictureBox.ClientRectangle.Width;
             int height = pictureBox.ClientRectangle.Height;
@@ -29,6 +32,8 @@ namespace psyche
         {
             this.pictureBox.Refresh();
             frameCounter++;
+            if (frameCounter % 60 == 0) fps = fpsMeasurer.Measure();
+            fpsMeasurer.Tick();
         }
 
         private void pictureBox_Paint(object sender, PaintEventArgs e)
@@ -37,25 +42,26 @@ namespace psyche
             g.Clear(Color.Black);
 
             var font = new Font("MS UI Gothic", 16);
-            g.DrawString("" + frameCounter, font, Brushes.Cyan, 20, 20);
+            g.DrawString($"{fps:0.00} fps",
+                font, Brushes.Cyan, 20, 20);
             font.Dispose();
         }
 
         private void playButton_Click(object sender, EventArgs e)
         {
             if (playButton.Text == "play") {
-                this.timer.Start();
+                this.fpsTimer.Start();
                 playButton.Text = "resume";
             }
             else {
-                this.timer.Stop();
+                this.fpsTimer.Stop();
                 playButton.Text = "play";
             }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            timer.Stop();
+            fpsTimer.Stop();
         }
     }
 }

@@ -38,14 +38,15 @@
             this.pictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox.Location = new System.Drawing.Point(0, 0);
             this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(309, 307);
+            this.pictureBox.Size = new System.Drawing.Size(624, 441);
             this.pictureBox.TabIndex = 0;
             this.pictureBox.TabStop = false;
             this.pictureBox.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox_Paint);
             // 
             // playButton
             // 
-            this.playButton.Location = new System.Drawing.Point(222, 272);
+            this.playButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.playButton.Location = new System.Drawing.Point(537, 406);
             this.playButton.Name = "playButton";
             this.playButton.Size = new System.Drawing.Size(75, 23);
             this.playButton.TabIndex = 1;
@@ -57,7 +58,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(309, 307);
+            this.ClientSize = new System.Drawing.Size(624, 441);
             this.Controls.Add(this.playButton);
             this.Controls.Add(this.pictureBox);
             this.Name = "Form1";
