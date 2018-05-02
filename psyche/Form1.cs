@@ -12,13 +12,13 @@ namespace psyche
     public partial class Form1 : Form
     {
         private readonly FPSTimer timer;
-        private double time = 0.0;
+        private int frameCounter = 0;
 
         public Form1()
         {
             InitializeComponent();
 
-            this.timer = new FPSTimer(frameTimer_Tick, 60);
+            this.timer = new FPSTimer(frameTimer_Tick, 60, this);
 
             int width = pictureBox.ClientRectangle.Width;
             int height = pictureBox.ClientRectangle.Height;
@@ -27,8 +27,8 @@ namespace psyche
 
         private void frameTimer_Tick(double time)
         {
-            this.time = time;
-            this.Invoke(new Action(() => this.pictureBox.Refresh()));
+            this.pictureBox.Refresh();
+            frameCounter++;
         }
 
         private void pictureBox_Paint(object sender, PaintEventArgs e)
@@ -36,8 +36,8 @@ namespace psyche
             Graphics g = e.Graphics;
             g.Clear(Color.Black);
 
-            var font = new Font("MS UI Gothic", 20);
-            g.DrawString("counter: " + (int)(this.time*60), font, Brushes.Cyan, 20, 20);
+            var font = new Font("MS UI Gothic", 16);
+            g.DrawString("" + frameCounter, font, Brushes.Cyan, 20, 20);
             font.Dispose();
         }
 
@@ -51,6 +51,11 @@ namespace psyche
                 this.timer.Stop();
                 playButton.Text = "play";
             }
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            timer.Stop();
         }
     }
 }
