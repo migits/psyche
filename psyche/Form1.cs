@@ -32,7 +32,7 @@ namespace psyche
 
             this.fpsTimer = new FPSTimer(frameTimer_Tick, idealFPS, this);
             this.fpsMeasurer = new SimpleFPSMeasurer();
-            this.w = new World(100);
+            this.w = new World(64);
             this.scope = new WorldScope(w);
 
             this.fpsTimer.Start();
@@ -65,7 +65,7 @@ namespace psyche
                 scope.RotDeg -= 180 / idealFPS;
             }
             if (Keyboard.IsKeyDown(Key.R)) {
-                w.InitRandom(0.5);
+                w.InitRandom(0.1);
             }
             w.Update();
 

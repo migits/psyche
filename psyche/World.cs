@@ -25,19 +25,21 @@ namespace psyche
             this.ruleB = new SortedSet<int> { 3 };
             this.neighborhood = new SortedSet<(int, int)> {
                 (-1, -1), (-1, 0), (-1, 1),
-                ( 0, -1), ( 0, 0), ( 0, 1),
-                ( 1, -1), ( 1, 0), ( 1, 1),
+                ( 0, -1),          ( 0, 1),
+                ( 1, -1), ( 1, 0), ( 1, 1)
             };
 
             this.random = new Random();
         }
 
         public void Update() {
+            var old = (bool[,])cells.Clone();
+
             for (int i = 0; i < Size; i++) {
                 for (int j = 0; j < Size; j++) {
                     int count = 0;
                     foreach ((int m, int n) in neighborhood) {
-                        if (cells[(int)MyMath.FloorMod(i+m, Size), (int)MyMath.FloorMod(j+n, Size)]) {
+                        if (old[(int)MyMath.FloorMod(i+m, Size), (int)MyMath.FloorMod(j+n, Size)]) {
                             count++;
                         }
                     }
