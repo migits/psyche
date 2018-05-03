@@ -27,6 +27,7 @@ namespace psyche {
             float scx = width / 2.0f,
                   scy = height / 2.0f;
 
+            // スペル間違ってますよ
             (double x0, double y0, double x1, double y1)[] boardaryLines = {
                 (-w.Size, 0.0, 2.0*w.Size, 0.0),
                 (-w.Size, w.Size, 2.0*w.Size, w.Size),
@@ -44,10 +45,10 @@ namespace psyche {
             for (int i = 0; i < w.Size; i++) {
                 for (int j = 0; j < w.Size; j++) {
                     if (w.cells[i, j]) {
-                        (cell[0].X, cell[0].Y) = TCWorldToScreen(i, j, scx, scy);
-                        (cell[1].X, cell[1].Y) = TCWorldToScreen(i, j+1, scx, scy);
-                        (cell[2].X, cell[2].Y) = TCWorldToScreen(i-1, j+1, scx, scy);
-                        (cell[3].X, cell[3].Y) = TCWorldToScreen(i-1, j, scx, scy);
+                        (cell[0].X, cell[0].Y) = TCWorldToScreen(j, i, scx, scy);
+                        (cell[1].X, cell[1].Y) = TCWorldToScreen(j+1, i, scx, scy);
+                        (cell[2].X, cell[2].Y) = TCWorldToScreen(j+1, i+1, scx, scy);
+                        (cell[3].X, cell[3].Y) = TCWorldToScreen(j, i+1, scx, scy);
                         g.FillPolygon(Brushes.Lime, cell);
                     }
                 }
