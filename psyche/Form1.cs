@@ -32,7 +32,7 @@ namespace psyche
 
             this.fpsTimer = new FPSTimer(frameTimer_Tick, idealFPS, this);
             this.fpsMeasurer = new SimpleFPSMeasurer();
-            this.w = new World(16, 16);
+            this.w = new World(100);
             this.scope = new WorldScope(w);
 
             this.fpsTimer.Start();
@@ -58,11 +58,14 @@ namespace psyche
             if (Keyboard.IsKeyDown(Key.X)) {
                 scope.ZoomLevel -= zoomSpeed / idealFPS;
             }
-            if (Keyboard.IsKeyDown(Key.R)) {
+            if (Keyboard.IsKeyDown(Key.A)) {
                 scope.RotDeg += 180 / idealFPS;
             }
-            if (Keyboard.IsKeyDown(Key.E)) {
+            if (Keyboard.IsKeyDown(Key.S)) {
                 scope.RotDeg -= 180 / idealFPS;
+            }
+            if (Keyboard.IsKeyDown(Key.R)) {
+                w.InitRandom(0.5);
             }
             w.Update();
 
@@ -75,19 +78,18 @@ namespace psyche
         private void pictureBox_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
 
-            scope.Paint(g);
+            scope.Paint(g, this.Height, this.Width);
 
-            var font = new Font("MS UI Gothic", 16);
+            var font = new Font("MS UI Gothic", 11);
             g.DrawString($"{fps:0.00} fps",
                 font, Brushes.Cyan, 10, 10);
             g.DrawString($"center: ({scope.CenterX:0.00},{scope.CenterY:0.00})",
-                font, Brushes.Cyan, 10, 30);
+                font, Brushes.Cyan, 10, 25);
             g.DrawString($"zoom level: {scope.ZoomLevel:0.00}",
-                font, Brushes.Cyan, 10, 50);
+                font, Brushes.Cyan, 10, 40);
             g.DrawString($"scale: {scope.Scale:0.00}",
-                font, Brushes.Cyan, 10, 70);
+                font, Brushes.Cyan, 10, 55);
             font.Dispose();
         }
 

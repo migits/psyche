@@ -15,23 +15,23 @@ namespace psyche {
 
         public WorldScope(World w) {
             this.w = w;
-            this.CenterX = w.Width/2.0;
-            this.CenterY = w.Height/2.0;
+            this.CenterX = 0.0;
+            this.CenterY = 0.0;
             ZoomLevel = 0.0;
             this.rot = 0.0;
         }
 
-        public void Paint(Graphics g) {
+        public void Paint(Graphics g, int height, int width) {
             g.Clear(Color.Black);
 
-            double scx = 640 / 2,
-                   scy = 480 / 2;
+            float scx = width / 2.0f,
+                  scy = height / 2.0f;
 
             (double x0, double y0, double x1, double y1)[] boardaryLines = {
-                (-w.Width, 0.0, 2.0*w.Width, 0.0),
-                (-w.Width, w.Height, 2.0*w.Width, w.Height),
-                (0.0, -w.Height, 0.0, 2.0*w.Height),
-                (w.Width, -w.Height, w.Width, 2.0*w.Height),
+                (-w.Size, 0.0, 2.0*w.Size, 0.0),
+                (-w.Size, w.Size, 2.0*w.Size, w.Size),
+                (0.0, -w.Size, 0.0, 2.0*w.Size),
+                (w.Size, -w.Size, w.Size, 2.0*w.Size),
             };
 
             foreach (var line in boardaryLines) {
@@ -40,19 +40,27 @@ namespace psyche {
                 g.DrawLine(Pens.Gray, sx0, sy0, sx1, sy1);
             }
 
-            foreach (Atom a in w.Atoms) {
-                (float sx, float sy) = TCWorldToScreen(a.X, a.Y, scx, scy);
-                g.DrawEllipse(Pens.Lime, sx - AtomRadius, sy - AtomRadius, sx + AtomRadius, sy + AtomRadius);
+            var cell = new PointF[4];
+            for (int i = 0; i < w.Size; i++) {
+                for (int j = 0; j < w.Size; j++) {
+                    if (w.cells[i, j]) {
+                        (cell[0].X, cell[0].Y) = TCWorldToScreen(i, j, scx, scy);
+                        (cell[1].X, cell[1].Y) = TCWorldToScreen(i, j+1, scx, scy);
+                        (cell[2].X, cell[2].Y) = TCWorldToScreen(i-1, j+1, scx, scy);
+                        (cell[3].X, cell[3].Y) = TCWorldToScreen(i-1, j, scx, scy);
+                        g.FillPolygon(Brushes.Lime, cell);
+                    }
+                }
             }
         }
 
         public double CenterX {
             get { return cx; }
-            set { cx = value - w.Width*Math.Floor(value/w.Width); }
+            set { cx = value - w.Size*Math.Floor(value/w.Size); }
         }
         public double CenterY {
             get { return cy; }
-            set { cy = value - w.Height * Math.Floor(value / w.Height); }
+            set { cy = value - w.Size * Math.Floor(value / w.Size); }
         }
 
         public double ZoomLevel {
@@ -85,13 +93,24 @@ namespace psyche {
         public float AtomRadius { get; set; }
 
         public (float sx, float sy) TCWorldToScreen(
-            double wx, double wy, double scx, double scy)
+            double wx, double wy, float scx, float scy)
         {
             double relX = wx - cx,
                    relY = wy - cy;
             return (
                 Convert.ToSingle(scale*(relX*Math.Cos(rot) - relY*Math.Sin(rot)) + scx),
                 Convert.ToSingle(-scale*(relX*Math.Sin(rot) + relY*Math.Cos(rot)) + scy)
+            );
+        }
+
+        public (double wx, double wy) TCScreenToWorld(
+            float sx, float sy, float scx, float scy)
+        {
+            float relX = sx - scx,
+                  relY = sy - scy;
+            return (
+                (relX*Math.Cos(-rot) - (-relY)*Math.Sin(-rot))/scale + cx,
+                (relX*Math.Sin(-rot) + (-relY)*Math.Cos(-rot))/scale + cy
             );
         }
     }

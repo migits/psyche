@@ -7,53 +7,52 @@ using System.Collections;
 namespace psyche
 {
     class World {
-        private double height, width;
-        private HashSet<Atom> atoms = new HashSet<Atom>();
+        private Random random;
 
-        public World(double height, double width) {
-            if (height <= 0.0 || width <= 0.0) {
-                throw new ArgumentException("height or width must be > 0.0");
+        public bool[,] cells;
+        public int Size { get; }
+        public SortedSet<int> ruleS, ruleB;
+        public SortedSet<(int, int)> neighborhood;
+
+        public World(int size) {
+            if (size <= 0) {
+                throw new ArgumentException("size must be > 0");
             }
-            this.height = height;
-            this.width = width;
+            this.cells = new bool[size, size];
+            this.Size = size;
+
+            this.ruleS = new SortedSet<int> { 2, 3 };
+            this.ruleB = new SortedSet<int> { 3 };
+            this.neighborhood = new SortedSet<(int, int)> {
+                (-1, -1), (-1, 0), (-1, 1),
+                ( 0, -1), ( 0, 0), ( 0, 1),
+                ( 1, -1), ( 1, 0), ( 1, 1),
+            };
+
+            this.random = new Random();
         }
 
         public void Update() {
-            foreach (var a in atoms) {
-                a.Update();
-                a.X %= width;
-                a.Y %= height;
+            for (int i = 0; i < Size; i++) {
+                for (int j = 0; j < Size; j++) {
+                    int count = 0;
+                    foreach ((int m, int n) in neighborhood) {
+                        if (cells[(int)MyMath.FloorMod(i+m, Size), (int)MyMath.FloorMod(j+n, Size)]) {
+                            count++;
+                        }
+                    }
+                    cells[i,j] &= ruleS.Contains(count);
+                    cells[i,j] |= ruleB.Contains(count);
+                }
             }
         }
 
-        public double Height { get { return height; } }
-        public double Width { get { return width; } }
-        public HashSet<Atom> Atoms { get { return atoms; } }
-    }
-
-    abstract class Atom {
-        public double Z { get; set; }
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double VX { get; set; }
-        public double VY { get; set; }
-
-        public void Update() {
-            Interact();
-            X += VX;
-            X += VY;
+        public void InitRandom(double rate) {
+            for (int i = 0; i < Size; i++) {
+                for (int j = 0; j < Size; j++) {
+                    cells[i,j] = (random.NextDouble() < rate);
+                }
+            }
         }
-
-        public void Accel(double ax, double ay) {
-            VX += ax;
-            VY += ay;
-        }
-
-        public void ApplyForce(double fx, double fy) {
-            VX += fx/Z;
-            VY += fy/Z;
-        }
-
-        protected abstract void Interact();
     }
 }
