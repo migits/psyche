@@ -3,116 +3,117 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
-using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics;
 
 namespace psyche {
     class WorldScope {
         private World w;
-        private double zoomLevel;
-        private double scale;
-        private double rot;
-        private double cx, cy;
+        private float zoomLevel;
+        private float scale;
+        private float rot;
+        private Complex32 c;
+        private Complex32 screenC, worldC;
 
         public WorldScope(World w) {
             this.w = w;
-            this.CenterX = 0.0;
-            this.CenterY = 0.0;
-            ZoomLevel = 0.0;
-            this.rot = 0.0;
+            this.c = Complex32.Zero;
+            ZoomLevel = 0.0f;
+            RotRad = 0.0f;
         }
 
         public void Paint(Graphics g, int height, int width) {
             g.Clear(Color.Black);
 
-            float scx = width / 2.0f,
-                  scy = height / 2.0f;
-
-            // スペル間違ってますよ
-            (double x0, double y0, double x1, double y1)[] boardaryLines = {
-                (-w.Size, 0.0, 2.0*w.Size, 0.0),
-                (-w.Size, w.Size, 2.0*w.Size, w.Size),
-                (0.0, -w.Size, 0.0, 2.0*w.Size),
-                (w.Size, -w.Size, w.Size, 2.0*w.Size),
+            var sc = new Complex32(width / 2.0f, height / 2.0f);
+            
+            (Complex32 z0, Complex32 z1)[] boundaryLines = {
+                (new Complex32(-w.Size, 0.0f), new Complex32(2.0f*w.Size, 0.0f)),
+                (new Complex32(-w.Size, w.Size), new Complex32(2.0f*w.Size, w.Size)),
+                (new Complex32(0.0f, -w.Size), new Complex32(0.0f, 2.0f*w.Size)),
+                (new Complex32(w.Size, -w.Size), new Complex32(w.Size, 2.0f*w.Size))
             };
 
-            foreach (var line in boardaryLines) {
-                (float sx0, float sy0) = TCWorldToScreen(line.x0, line.y0, scx, scy);
-                (float sx1, float sy1) = TCWorldToScreen(line.x1, line.y1, scx, scy);
-                g.DrawLine(Pens.Gray, sx0, sy0, sx1, sy1);
+            foreach (var line in boundaryLines) {
+                Complex32 z0 = ScreenC * line.z0 + sc,
+                          z1 = ScreenC * line.z1 + sc;
+                g.DrawLine(Pens.Gray, z0.Real, z0.Imaginary, z1.Real, z1.Imaginary);
             }
 
-            var cell = new PointF[4];
+            var points = new PointF[4];
             for (int i = 0; i < w.Size; i++) {
                 for (int j = 0; j < w.Size; j++) {
                     if (w.cells[i, j]) {
-                        (cell[0].X, cell[0].Y) = TCWorldToScreen(j, i, scx, scy);
-                        (cell[1].X, cell[1].Y) = TCWorldToScreen(j+1, i, scx, scy);
-                        (cell[2].X, cell[2].Y) = TCWorldToScreen(j+1, i+1, scx, scy);
-                        (cell[3].X, cell[3].Y) = TCWorldToScreen(j, i+1, scx, scy);
-                        g.FillPolygon(Brushes.Lime, cell);
+                        Complex32 z0 = ScreenC * (new Complex32(j, i)) + sc,
+                                  z1 = ScreenC * (new Complex32(j+1, i)) + sc,
+                                  z2 = ScreenC * (new Complex32(j+1, i+1)) + sc,
+                                  z3 = ScreenC * (new Complex32(j, i+1)) + sc;
+                        (points[0].X, points[0].Y) = (z0.Real, z0.Imaginary);
+                        (points[1].X, points[1].Y) = (z1.Real, z1.Imaginary);
+                        (points[2].X, points[2].Y) = (z2.Real, z2.Imaginary);
+                        (points[3].X, points[3].Y) = (z3.Real, z3.Imaginary);
+                        g.FillPolygon(Brushes.Lime, points);
                     }
                 }
             }
         }
 
-        public double CenterX {
-            get { return cx; }
-            set { cx = value - w.Size*Math.Floor(value/w.Size); }
-        }
-        public double CenterY {
-            get { return cy; }
-            set { cy = value - w.Size * Math.Floor(value / w.Size); }
+        public Complex32 Center {
+            get { return c; }
+            set { c = value; }
         }
 
-        public double ZoomLevel {
+        private Complex32 ScreenC {
+            get { return screenC; }
+            set {
+                screenC = value;
+                worldC = Complex32.One / screenC;
+            }
+        }
+        private Complex32 WorldC {
+            get { return worldC; }
+            set {
+                worldC = value;
+                screenC = Complex32.One / worldC;
+            }
+        }
+        
+        public float ZoomLevel {
             get { return zoomLevel; }
             set {
                 zoomLevel = value;
-                scale = Math.Pow(2.0, zoomLevel);
+                scale = Convert.ToSingle(Math.Pow(2.0, zoomLevel));
+                ScreenC = Complex32.FromPolarCoordinates(scale, rot);
             }
         }
-        public double Scale {
+        public float Scale {
             get { return scale; }
             set {
                 scale = value;
-                zoomLevel = Math.Log(scale, 2.0);
+                zoomLevel = Convert.ToSingle(Math.Log(scale, 2.0));
+                ScreenC = Complex32.FromPolarCoordinates(scale, rot);
             }
         }
 
-        public double RotRad {
+        public float RotRad {
             get { return rot; }
             set {
-                double t = 2.0 * Math.PI;
-                rot = value - t*Math.Floor(value/t);
+                var t = 2.0 * Math.PI;
+                rot = value - Convert.ToSingle(t*Math.Floor(value/t));
+                Complex32.FromPolarCoordinates(scale, rot);
             }
         }
-        public double RotDeg {
-            get { return RotRad / Math.PI * 180.0; }
-            set { RotRad = value / 180.0 * Math.PI; }
+        public float RotDeg {
+            get { return RotRad / Convert.ToSingle(Math.PI) * 180.0f; }
+            set { RotRad = value / 180.0f * Convert.ToSingle(Math.PI); }
         }
 
-        public float AtomRadius { get; set; }
-
-        public (float sx, float sy) TCWorldToScreen(
-            double wx, double wy, float scx, float scy)
-        {
-            double relX = wx - cx,
-                   relY = wy - cy;
-            return (
-                Convert.ToSingle(scale*(relX*Math.Cos(rot) - relY*Math.Sin(rot)) + scx),
-                Convert.ToSingle(-scale*(relX*Math.Sin(rot) + relY*Math.Cos(rot)) + scy)
-            );
+        public float CenterX {
+            get { return c.Real; }
+            set { c = new Complex32(value, c.Imaginary); }
         }
-
-        public (double wx, double wy) TCScreenToWorld(
-            float sx, float sy, float scx, float scy)
-        {
-            float relX = sx - scx,
-                  relY = sy - scy;
-            return (
-                (relX*Math.Cos(-rot) - (-relY)*Math.Sin(-rot))/scale + cx,
-                (relX*Math.Sin(-rot) + (-relY)*Math.Cos(-rot))/scale + cy
-            );
+        public float CenterY {
+            get { return c.Imaginary; }
+            set { c = new Complex32(c.Real, value); }
         }
     }
 }

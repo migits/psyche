@@ -10,15 +10,15 @@ using System.Windows.Input;
 
 namespace psyche
 {
-    public partial class Form1 : Form
-    {
+    public partial class Form1 : Form {
+        public const double FPS = 60.0;
+
         private readonly FPSTimer fpsTimer;
         private readonly SimpleFPSMeasurer fpsMeasurer;
         private readonly World w;
         private readonly WorldScope scope;
         private int frameCounter = 0;
         private double fps = Double.NaN;
-        private double idealFPS = 60.0;
         private double focusSpeed = 8.0;
         private double zoomSpeed = 2.0;
 
@@ -29,8 +29,7 @@ namespace psyche
             int width = pictureBox.ClientRectangle.Width;
             int height = pictureBox.ClientRectangle.Height;
             pictureBox.Image = new Bitmap(width, height);
-
-            this.fpsTimer = new FPSTimer(frameTimer_Tick, idealFPS, this);
+            
             this.fpsMeasurer = new SimpleFPSMeasurer();
             this.w = new World(64);
             this.scope = new WorldScope(w);
@@ -38,31 +37,31 @@ namespace psyche
             this.fpsTimer.Start();
         }
 
-        private void frameTimer_Tick(double time)
+        public void frameTimer_Tick(double time)
         {
             if (Keyboard.IsKeyDown(Key.Up)) {
-                scope.CenterY += focusSpeed / idealFPS;
+                scope.CenterY += focusSpeed / FPS;
             }
             if (Keyboard.IsKeyDown(Key.Down)) {
-                scope.CenterY -= focusSpeed / idealFPS;
+                scope.CenterY -= focusSpeed / FPS;
             }
             if (Keyboard.IsKeyDown(Key.Left)) {
-                scope.CenterX -= focusSpeed / idealFPS;
+                scope.CenterX -= focusSpeed / FPS;
             }
             if (Keyboard.IsKeyDown(Key.Right)) {
-                scope.CenterX += focusSpeed / idealFPS;
+                scope.CenterX += focusSpeed / FPS;
             }
             if (Keyboard.IsKeyDown(Key.Z)) {
-                scope.ZoomLevel += zoomSpeed / idealFPS;
+                scope.ZoomLevel += zoomSpeed / FPS;
             }
             if (Keyboard.IsKeyDown(Key.X)) {
-                scope.ZoomLevel -= zoomSpeed / idealFPS;
+                scope.ZoomLevel -= zoomSpeed / FPS;
             }
             if (Keyboard.IsKeyDown(Key.A)) {
-                scope.RotDeg += 180 / idealFPS;
+                scope.RotDeg += 180 / FPS;
             }
             if (Keyboard.IsKeyDown(Key.S)) {
-                scope.RotDeg -= 180 / idealFPS;
+                scope.RotDeg -= 180 / FPS;
             }
             if (Keyboard.IsKeyDown(Key.R)) {
                 w.InitRandom(0.1);
@@ -71,7 +70,7 @@ namespace psyche
 
             pictureBox.Refresh();
             frameCounter++;
-            if (frameCounter % (int)idealFPS == 0) fps = fpsMeasurer.Measure();
+            if (frameCounter % (int)FPS == 0) fps = fpsMeasurer.Measure();
             fpsMeasurer.Tick();
         }
 

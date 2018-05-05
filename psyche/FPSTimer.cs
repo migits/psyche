@@ -14,63 +14,48 @@ namespace psyche
         public delegate void FrameTickCallback(double time);
         
         private readonly Stopwatch sw = new Stopwatch();
-        private readonly FrameTickCallback ftc;
         private readonly long ticksPerFrame;
-        private readonly Control ctrl;
-        private Task task;
+        private long nextFrameTickTime;
 
-        public readonly double fps;
+        public double Fps { get; }
 
-        public FPSTimer(FrameTickCallback ftc, double fps, Control ctrl) {
-            this.ftc = ftc;
+        public FPSTimer(double fps) {
+            if (fps <= 0.0) {
+                throw new ArgumentException("fps must be > 0.0");
+            }
+            
             this.ticksPerFrame = (long)(Stopwatch.Frequency / fps);
-            this.ctrl = ctrl;
-            this.fps = fps;
+            this.Fps = fps;
+            this.nextFrameTickTime = ticksPerFrame;
+        }
+
+        public void WaitSurplus() {
+            while (sw.ElapsedTicks < nextFrameTickTime) {
+                // CPUを一息入れるにはどれがいいんだろ...
+                Thread.Yield();
+                // Thread.Sleep(0);
+                // Thread.Sleep(1);
+            };
+
+            nextFrameTickTime += ticksPerFrame;
         }
 
         public void Start() {
             if (sw.IsRunning) return;
-
             sw.Start();
-            
-            task = Task.Factory.StartNew(() => {
-                long t0, t1;
-                lock(sw) t0 = t1 = sw.ElapsedTicks;
-                
-                IAsyncResult ar;
-                while (true) {
-                    ar = ctrl.BeginInvoke(ftc, (double)(t0 / Stopwatch.Frequency));
-                    // EndInvokeするとStop関数の中のtask.Wait();とのデッドロックが起きる
-                    // ctrl.EndInvoke(ar);
-
-                    while (t1 - t0 < ticksPerFrame) {
-                        // CPUを一息入れるにはどれがいいんだろ...
-                        Thread.Yield();
-                        // Thread.Sleep(0);
-                        // Thread.Sleep(1);
-                        
-                        lock(sw) {
-                            if (!sw.IsRunning) return;
-                            t1 = sw.ElapsedTicks;
-                        }
-                    };
-
-                    t0 += ticksPerFrame;
-                }
-            });
         }
 
         public void Stop() {
             if (!sw.IsRunning) return;
-            
-            lock(sw) sw.Stop();
-            task.Wait();
+            sw.Stop();
         }
 
         public bool IsRunning { get{
-            lock(sw) {
-                return sw.IsRunning;
-            }
+            return sw.IsRunning;
+        } }
+
+        public TimeSpan Elapsed { get {
+            return sw.Elapsed;
         } }
     }
 }
